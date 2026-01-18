@@ -1,0 +1,21 @@
+=== PHP SAMPLES ===
+
+Job: Thực Tập Sinh PHP (Sinh Viên Năm Cuối, Backend)
+Group: intern
+Context: thực tập sinh php sinh viên năm cuối backend 
+
+
+=== JAVA SAMPLES ===
+
+Job: Senior JAVA Developer (5 Năm Kinh Nghiệm) Lương Từ 20 - 45 Triệu Tại Hà Nội, Đi Làm Ngay
+Group: backend
+Context: senior java developer 5 năm kinh nghiệm lương từ 20 - 45 triệ
+
+Job: Team Lead / Technical Lead Java Full Stack (Spring Boot, Angular/ReactJS)
+Group: fullstack
+Context: team lead technical lead java full stack spring boot angular reactjs 
+
+Job: Java Spring Boot
+Group: backend
+Context: java spring boot 
+
