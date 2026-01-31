@@ -9,6 +9,11 @@ Analyses:
 3. Skill co-occurrence patterns
 4. Network visualization
 5. Top rules by support, confidence, lift
+
+FIXED ISSUES:
+- Changed 'skills_detected' to 'skills_str' (matching 04_extract_features.py output)
+- Improved error handling
+- Better data validation
 """
 
 import pandas as pd
@@ -26,7 +31,7 @@ try:
     HAS_MLXTEND = True
 except ImportError:
     print("❌ Error: mlxtend not installed!")
-    print("   Install with: pip install mlxtend")
+    print("   Install with: pip install mlxtend --break-system-packages")
     print("   Then run this script again.")
     exit(1)
 
@@ -36,7 +41,7 @@ try:
     HAS_NETWORKX = True
 except ImportError:
     print("⚠️  networkx not installed. Network visualization will be skipped.")
-    print("   Install with: pip install networkx")
+    print("   Install with: pip install networkx --break-system-packages")
     HAS_NETWORKX = False
 
 # Configuration
@@ -56,8 +61,22 @@ sns.set_palette("Set2")
 def load_data():
     """Load features data"""
     print("📂 Loading data...")
+    
+    if not Path(FEATURES_PATH).exists():
+        print(f"❌ File not found: {FEATURES_PATH}")
+        print(f"   Please run: python3 src/04_extract_features.py --source topcv")
+        exit(1)
+    
     df = pd.read_csv(FEATURES_PATH)
     print(f"✅ Loaded {len(df)} jobs")
+    
+    # Check for required columns
+    if 'skills_str' not in df.columns and 'skills' not in df.columns:
+        print("❌ No skills columns found!")
+        print(f"   Available columns: {list(df.columns)}")
+        print(f"   Please run feature extraction first: python3 src/04_extract_features.py")
+        exit(1)
+    
     return df
 
 
@@ -67,17 +86,43 @@ def prepare_transactions(df):
     print("📦 PREPARING SKILL TRANSACTIONS")
     print("="*60)
     
-    if 'skills_detected' not in df.columns:
-        print("❌ No skills_detected column found")
+    # Check which skills column is available
+    skills_column = None
+    if 'skills_str' in df.columns:
+        skills_column = 'skills_str'
+    elif 'skills' in df.columns:
+        skills_column = 'skills'
+    else:
+        print("❌ No skills column found")
+        print(f"   Available columns: {list(df.columns)}")
         return None
+    
+    print(f"✅ Using column: {skills_column}")
     
     # Extract transactions (list of skill sets)
     transactions = []
     
-    for skills in df['skills_detected'].dropna():
-        skill_list = [s.strip() for s in str(skills).split(',') if s.strip()]
+    for skills in df[skills_column].dropna():
+        if skills_column == 'skills_str':
+            # Format: "Python, Java, MySQL"
+            skill_list = [s.strip() for s in str(skills).split(',') if s.strip()]
+        else:
+            # Format: "['Python', 'Java', 'MySQL']" (string representation of list)
+            try:
+                # Try to parse as list
+                import ast
+                skill_list = ast.literal_eval(str(skills))
+                if not isinstance(skill_list, list):
+                    skill_list = [s.strip() for s in str(skills).split(',') if s.strip()]
+            except:
+                skill_list = [s.strip() for s in str(skills).split(',') if s.strip()]
+        
         if skill_list:
             transactions.append(skill_list)
+    
+    if not transactions:
+        print("❌ No skill transactions found")
+        return None
     
     print(f"\n✅ Prepared {len(transactions)} transactions")
     
@@ -336,6 +381,7 @@ def create_skill_network(rules, top_n=30):
     
     if not HAS_NETWORKX:
         print("⚠️  Skipping network visualization (networkx not available)")
+        print("   Install with: pip install networkx --break-system-packages")
         return None
     
     # Get top rules
