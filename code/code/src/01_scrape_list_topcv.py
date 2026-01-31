@@ -27,7 +27,7 @@ def parse_jobs(html: str):
 
     return jobs
 
-def scrape_topcv_it(max_jobs=500, max_pages=200):
+def scrape_topcv_it(max_jobs=1000, max_pages=500):
     s = requests.Session()
     all_jobs = []
 
